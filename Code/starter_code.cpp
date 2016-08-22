@@ -10,12 +10,12 @@ using namespace std;
 struct node // bid node structure
 {
 	int cid; //company
-	double price;  
+	double price;
 	int norc;  // no. of regions in one bid
 	int region[max];
 };
-
-float tim; 
+//Checking to see if the commit works
+float tim;
 int nor;
 int nob;
 int noc;
@@ -46,22 +46,22 @@ void readFile()
 			ch1[j]=ch[t];
 			j++;t++;
 		}
-		
+
 		ch1[j]='\0';
 		tob[i].cid=atoi(ch1);
-	
+
 		ch1[0]='\0';j=0;t++;
 		while(ch[t]!=' ')
 		{
 			ch1[j]=ch[t];
 			j++;t++;
 		}
-		ch1[j]='\0';			
+		ch1[j]='\0';
 		tob[i].price=strtod (ch1, NULL);
 		t++;
-		
+
 		int x=0;
-		int w=t;		
+		int w=t;
 		while(ch[t]!='#')
 		{
 			if(ch[t]==' ')
@@ -82,7 +82,7 @@ void readFile()
 			ch1[j]='\0';
 			tob[i].region[qq]=atoi(ch1);
 		}
-		getline(cin,g);	
+		getline(cin,g);
 	}
 }
 
@@ -117,7 +117,7 @@ void fill(int bidno)
 	{
 		reg[tob[bidno].region[i]]=true;
 	}
-}	
+}
 
 //helper function of getRandom function
 bool checkReg(int bidno)
