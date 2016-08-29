@@ -11,7 +11,8 @@
 #include <cstdio>
 #include <vector>
 #include <time.h>
-#define max 10000
+#include <queue>
+#define max 1000
 using namespace std;
 
 struct Bid
@@ -43,14 +44,14 @@ struct State
             companiesSelected[i] = false;
     }
 
-    State (State &s){
-        for (int i=0; i<numBids; i++)
-            bidsSelected[i] = s.bidsSelected[i];
-        for (int i=0; i<numRegions; i++)
-            regionsSelected[i] = s.regionsSelected[i];
-        for (int i=0; i<numCompanies; i++)
-            companiesSelected[i] = s.companiesSelected[i];
-    }
+//    State (State &s){
+//        for (int i=0; i<numBids; i++)
+//            bidsSelected[i] = s.bidsSelected[i];
+//        for (int i=0; i<numRegions; i++)
+//            regionsSelected[i] = s.regionsSelected[i];
+//        for (int i=0; i<numCompanies; i++)
+//            companiesSelected[i] = s.companiesSelected[i];
+//    }
 
     bool checkValidState(){
         for (int i=0; i<numRegions; i++)
@@ -226,7 +227,7 @@ void HillClimbing()
                 maxValue = nextStates[i].getValue();
             }
 
-        if (maxValue > currentState.getValue())
+        if (maxValue >= currentState.getValue())
             currentState = nextStates[maxValueState];
         else
             break;
@@ -242,9 +243,50 @@ void HillClimbing()
 */
 }
 
+struct StateValueComparator{
+    const bool operator()(State A, State B) const{
+        return (A.getValue() <= B.getValue());
+    }
+};
+
+void BeamSearch (int k){
+    State *beam = new State[k];
+    for (int i=0; i<k; i++)
+        beam[i].randomizeState();
+    cout << "State Value: " << (long)beam[0].getValue() <<  endl;
+    
+    while(true){
+        int numNeighbours = 0;
+        priority_queue<State, vector<State>, StateValueComparator> stateHeap;
+        
+        for (int i=0; i<k; i++){
+            State *nextStates = beam[i].getNeighbours(numNeighbours);
+            for (int j=0; j<numNeighbours; j++)
+                stateHeap.push(nextStates[j]);
+        }
+        
+        State* nextBeam = new State[k];
+        int i;
+        for (i=0; i<k && !stateHeap.empty(); i++){
+            nextBeam[i] = stateHeap.top();
+            stateHeap.pop();
+        }
+        k = i;
+        
+        if (nextBeam[0].getValue() >= beam[0].getValue()){
+            delete [] beam;
+            beam = nextBeam;
+        }
+        else
+            break;
+        cout << "State Value: " << (long)beam[0].getValue() <<  endl;
+    }
+}
+
 int main()
 {
     readFile();
-    HillClimbing();
+//    HillClimbing();
+    BeamSearch(20);
     return 0;
 }
