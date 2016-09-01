@@ -13,6 +13,7 @@
 #include <time.h>
 #include <queue>
 #define max 1000
+#include <ctime>
 using namespace std;
 
 struct Bid
@@ -210,12 +211,13 @@ void readFile()
     }
 }
 
-void HillClimbing()
+long HillClimbing()
 {
     State currentState;
     currentState.randomizeState();
+    cout<<"Starting"<<endl;
     cout << "State Value: " << (long)currentState.getValue() <<  endl;
-
+    long stateValue;
     while(true){
         int numNeighbours = 0;
         State* nextStates = currentState.getNeighbours(numNeighbours);
@@ -233,9 +235,12 @@ void HillClimbing()
         else
             break;
         cout << "State Value: " << (long)currentState.getValue() <<  endl;
+
+        delete[] nextStates;
     }
-
-
+    stateValue = currentState.getValue();
+    cout<<"ending"<<endl;
+    return stateValue;
 /*
     for(int i=0; i<numBids; i++)
         if(currentState.bidsSelected[i])
@@ -244,47 +249,6 @@ void HillClimbing()
     cout << "State Value: " << (long)currentState.getValue() <<  endl;
 */
 }
-
-void HillClimbingWithRandomRestarts(int maxLimit)
-{
-
-    long maxValue=-1;
-    for(int counter = 0;counter<maxLimit; counter++)
-    {
-        State currentState;
-        currentState.randomizeState();
-        cout<<"Starting"<<endl;
-        cout << "State Value: " << (long)currentState.getValue() <<  endl;
-
-    while(true){
-        int numNeighbours = 0;
-        State* nextStates = currentState.getNeighbours(numNeighbours);
-
-        int maxValueState = 0;
-        double maxValue = 0;
-        for (int i=0; i<numNeighbours; i++)
-            if (nextStates[i].getValue() > maxValue){
-                maxValueState = i;
-                maxValue = nextStates[i].getValue();
-            }
-
-        if (maxValue > currentState.getValue())
-            currentState = nextStates[maxValueState];
-        else
-            break;
-        cout << "State Value: " << (long)currentState.getValue() <<  endl;
-    }
-
-    if(maxValue<currentState.getValue())
-    {
-        maxValue = currentState.getValue();
-    }
-    cout<<"Ending"<<endl;
-    }
-
-    cout<<"Maxvalue is: "<<maxValue<<endl;
-}
-
 
 struct StateValueComparator{
     const bool operator()(State A, State B) const{
@@ -325,11 +289,23 @@ void BeamSearch (int k){
         cout << "State Value: " << (long)beam[0].getValue() <<  endl;
     }
 }
+void HillClimbingWithRandomRestarts(int maxLimit)
+{
+    long maxValue = -1;
+     for(int i = 0;i<maxLimit;i++)
+     {
+         long currValue = HillClimbing();
 
+         if(currValue>maxValue)
+                maxValue = currValue;
+         cout<<"Current maxvalue is: "<<maxValue<<endl;
+     }
+     cout<<"maxvalue after "<<maxLimit<<" random restarts: "<<maxValue<<endl;
+}
 int main()
 {
     readFile();
-//    HillClimbing();
-    BeamSearch(20);
-    return 0;
+    HillClimbingWithRandomRestarts(100);
+   // BeamSearch(20);
+   return 0;
 }
