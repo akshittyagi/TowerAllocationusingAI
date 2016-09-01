@@ -30,6 +30,7 @@ struct Bid allBids[max]; // all input bids
 
 struct State
 {
+    //Array for marking selected items in ith State
     bool bidsSelected[max];
     bool companiesSelected[max];
     bool regionsSelected[max];
@@ -233,6 +234,7 @@ void HillClimbing()
         cout << "State Value: " << (long)currentState.getValue() <<  endl;
     }
 
+
 /*
     for(int i=0; i<numBids; i++)
         if(currentState.bidsSelected[i])
@@ -242,9 +244,51 @@ void HillClimbing()
 */
 }
 
+void HillClimbingWithRandomRestarts(int maxLimit)
+{
+
+    long maxValue=-1;
+    for(int counter = 0;counter<maxLimit; counter++)
+    {
+        State currentState;
+        currentState.randomizeState();
+        cout<<"Starting"<<endl;
+        cout << "State Value: " << (long)currentState.getValue() <<  endl;
+
+    while(true){
+        int numNeighbours = 0;
+        State* nextStates = currentState.getNeighbours(numNeighbours);
+
+        int maxValueState = 0;
+        double maxValue = 0;
+        for (int i=0; i<numNeighbours; i++)
+            if (nextStates[i].getValue() > maxValue){
+                maxValueState = i;
+                maxValue = nextStates[i].getValue();
+            }
+
+        if (maxValue > currentState.getValue())
+            currentState = nextStates[maxValueState];
+        else
+            break;
+        cout << "State Value: " << (long)currentState.getValue() <<  endl;
+    }
+
+    if(maxValue<currentState.getValue())
+    {
+        maxValue = currentState.getValue();
+    }
+    cout<<"Ending"<<endl;
+    }
+
+    cout<<"Maxvalue is: "<<maxValue<<endl;
+}
+
+
 int main()
 {
     readFile();
-    HillClimbing();
+   // HillClimbing();
+    HillClimbingWithRandomRestarts(2);
     return 0;
 }

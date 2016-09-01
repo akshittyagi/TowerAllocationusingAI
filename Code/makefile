@@ -3,4 +3,4 @@ all:
 clean:
 	rm *.out
 run:
-	./output.out < ./TestCases/20.txt
+	./output.out < ./TestCases/13.txt

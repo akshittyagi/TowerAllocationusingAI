@@ -89,7 +89,7 @@ void readFile()
 void fill(int);
 bool checkReg(int);
 void getRandom() //modify this function to produce the best output(following the conditions mentioned in the assignment)
-{
+{//nob is the number of bids
 	int num1,i;
 	num1=rand()%nob;
 	fill(num1);
