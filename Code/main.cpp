@@ -12,7 +12,7 @@
 #include <vector>
 #include <time.h>
 #include <queue>
-#define max 1000
+#define max 10000
 #include <ctime>
 using namespace std;
 
@@ -77,32 +77,31 @@ struct State
         return true;
     }
 
-    State* getNeighbours (int &numNeighbours){
-        State* neighbours = new State[max];
-        numNeighbours = 0;
-
+    vector<State> getNeighbours (){
+        vector<State> neighbours;
+        
         for(int i=0; i<numBids; i++){
             State neighbour(*this);
             if (bidsSelected[i]){
                 neighbour.bidsSelected[i] = false;
                 if (neighbour.checkValidState())
-                    neighbours[numNeighbours++] = neighbour;
-
+                    neighbours.push_back(neighbour);
+                
                 for (int j=0; j<numBids; j++){
                     if (j!=i and !neighbour.bidsSelected[j]){
                         neighbour.bidsSelected[j]=true;
                         if (neighbour.checkValidState())
-                            neighbours[numNeighbours++] = neighbour;
+                            neighbours.push_back(neighbour);
                         neighbour.bidsSelected[j]=false;
                     }
                 }
             } else {
                 neighbour.bidsSelected[i] = true;
                 if (neighbour.checkValidState())
-                    neighbours[numNeighbours++] = neighbour;
+                    neighbours.push_back(neighbour);
             }
         }
-
+        
         return neighbours;
     }
 
@@ -123,7 +122,6 @@ struct State
         for (int i=0; i<numCompanies; i++)
             companiesSelected[i] = false;
 
-        srand(time(NULL));
         int num = rand() % numBids;
         addBidToState(num);
 
@@ -215,16 +213,14 @@ long HillClimbing()
 {
     State currentState;
     currentState.randomizeState();
-    cout<<"Starting"<<endl;
-    cout << "State Value: " << (long)currentState.getValue() <<  endl;
-    long stateValue;
+//    cout << "State Value: " << (long)currentState.getValue() <<  endl;
+
     while(true){
-        int numNeighbours = 0;
-        State* nextStates = currentState.getNeighbours(numNeighbours);
+        vector<State> nextStates = currentState.getNeighbours();
 
         int maxValueState = 0;
         double maxValue = 0;
-        for (int i=0; i<numNeighbours; i++)
+        for (int i=0; i<nextStates.size(); i++)
             if (nextStates[i].getValue() > maxValue){
                 maxValueState = i;
                 maxValue = nextStates[i].getValue();
@@ -234,14 +230,11 @@ long HillClimbing()
             currentState = nextStates[maxValueState];
         else
             break;
-        cout << "State Value: " << (long)currentState.getValue() <<  endl;
-
-        delete[] nextStates;
+//        cout << "State Value: " << (long)currentState.getValue() <<  endl;
     }
-    stateValue = currentState.getValue();
-    cout<<"ending"<<endl;
-    return stateValue;
-/*
+    
+    return (long)currentState.getValue();
+/*    
     for(int i=0; i<numBids; i++)
         if(currentState.bidsSelected[i])
             cout << i << " ";
@@ -261,17 +254,16 @@ void BeamSearch (int k){
     for (int i=0; i<k; i++)
         beam[i].randomizeState();
     cout << "State Value: " << (long)beam[0].getValue() <<  endl;
-
+    
     while(true){
-        int numNeighbours = 0;
         priority_queue<State, vector<State>, StateValueComparator> stateHeap;
-
+        
         for (int i=0; i<k; i++){
-            State *nextStates = beam[i].getNeighbours(numNeighbours);
-            for (int j=0; j<numNeighbours; j++)
+            vector<State> nextStates = beam[i].getNeighbours();
+            for (int j=0; j<nextStates.size(); j++)
                 stateHeap.push(nextStates[j]);
         }
-
+        
         State* nextBeam = new State[k];
         int i;
         for (i=0; i<k && !stateHeap.empty(); i++){
@@ -279,7 +271,7 @@ void BeamSearch (int k){
             stateHeap.pop();
         }
         k = i;
-
+        
         if (nextBeam[0].getValue() >= beam[0].getValue()){
             delete [] beam;
             beam = nextBeam;
@@ -289,6 +281,7 @@ void BeamSearch (int k){
         cout << "State Value: " << (long)beam[0].getValue() <<  endl;
     }
 }
+
 void HillClimbingWithRandomRestarts(int maxLimit)
 {
     long maxValue = -1;
@@ -302,6 +295,7 @@ void HillClimbingWithRandomRestarts(int maxLimit)
      }
      cout<<"maxvalue after "<<maxLimit<<" random restarts: "<<maxValue<<endl;
 }
+
 int main()
 {
     readFile();
