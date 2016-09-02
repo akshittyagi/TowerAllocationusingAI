@@ -12,8 +12,8 @@
 #include <vector>
 #include <time.h>
 #include <queue>
-#define max 10000
 #include <ctime>
+#define max 10000
 using namespace std;
 
 struct Bid
@@ -32,12 +32,14 @@ struct Bid allBids[max]; // all input bids
 
 struct State
 {
-    //Array for marking selected items in ith State
-    bool bidsSelected[max];
-    bool companiesSelected[max];
-    bool regionsSelected[max];
-
+    vector<bool> bidsSelected;
+    vector<bool> companiesSelected;
+    vector<bool> regionsSelected;
+    
     State(){
+        bidsSelected.resize(numBids);
+        regionsSelected.resize(numRegions);
+        companiesSelected.resize(numCompanies);
         for (int i=0; i<numBids; i++)
             bidsSelected[i] = false;
         for (int i=0; i<numRegions; i++)
@@ -45,15 +47,6 @@ struct State
         for (int i=0; i<numCompanies; i++)
             companiesSelected[i] = false;
     }
-
-//    State (State &s){
-//        for (int i=0; i<numBids; i++)
-//            bidsSelected[i] = s.bidsSelected[i];
-//        for (int i=0; i<numRegions; i++)
-//            regionsSelected[i] = s.regionsSelected[i];
-//        for (int i=0; i<numCompanies; i++)
-//            companiesSelected[i] = s.companiesSelected[i];
-//    }
 
     bool checkValidState(){
         for (int i=0; i<numRegions; i++)
@@ -81,7 +74,7 @@ struct State
         vector<State> neighbours;
         
         for(int i=0; i<numBids; i++){
-            State neighbour(*this);
+            State neighbour = *this;
             if (bidsSelected[i]){
                 neighbour.bidsSelected[i] = false;
                 if (neighbour.checkValidState())
@@ -230,7 +223,7 @@ long HillClimbing()
             currentState = nextStates[maxValueState];
         else
             break;
-//        cout << "State Value: " << (long)currentState.getValue() <<  endl;
+        cout << "State Value: " << (long)currentState.getValue() <<  endl;
     }
     
     return (long)currentState.getValue();
@@ -285,19 +278,18 @@ void BeamSearch (int k){
 void HillClimbingWithRandomRestarts(int maxLimit)
 {
     long maxValue = -1;
-     for(int i = 0;i<maxLimit;i++)
-     {
-         long currValue = HillClimbing();
-
-         if(currValue>maxValue)
-                maxValue = currValue;
-         cout<<"Current maxvalue is: "<<maxValue<<endl;
-     }
-     cout<<"maxvalue after "<<maxLimit<<" random restarts: "<<maxValue<<endl;
+    for(int i = 0;i<maxLimit;i++){
+        long currValue = HillClimbing();
+        if(currValue>maxValue)
+            maxValue = currValue;
+        cout<<"Current maxvalue is: "<<maxValue<<endl;
+    }
+    cout<<"Maxvalue after "<<maxLimit<<" random restarts: "<<maxValue<<endl;
 }
 
 int main()
 {
+    srand((unsigned int)time(NULL));
     readFile();
     HillClimbingWithRandomRestarts(100);
    // BeamSearch(20);
