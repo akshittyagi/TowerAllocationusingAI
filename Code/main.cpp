@@ -130,6 +130,21 @@ struct State
                     if (neighbour.canAddBidToState(*it)){
                         neighbour.addBidToState(*it);
                         neighbours.push_back(neighbour);
+                        
+                        State neighbour2 = neighbour;
+                        for (unordered_set<int>::iterator it2=it; it2!=candidateBids.end(); it2++){
+                            if (neighbour2.canAddBidToState(*it2)){
+                                neighbour2.addBidToState(*it2);
+                                neighbours.push_back(neighbour2);
+                            }
+                        }
+                        neighbour.removeBidFromState(*it);
+                    }
+                }
+                
+                for (unordered_set<int>::iterator it=candidateBids.begin(); it!=candidateBids.end(); it++){
+                    if (neighbour.canAddBidToState(*it)){
+                        neighbour.addBidToState(*it);
                         for (unordered_set<int>::iterator it2=it; it2!=candidateBids.end(); it2++){
                             if (neighbour.canAddBidToState(*it2)){
                                 neighbour.addBidToState(*it2);
@@ -139,6 +154,8 @@ struct State
                         neighbour.removeBidFromState(*it);
                     }
                 }
+
+                
             } else {
                 if (neighbour.canAddBidToState(i)){
                     neighbour.addBidToState(i);
@@ -480,7 +497,8 @@ void HillClimbingWithRandomRestarts(int maxLimit)
 {
     long maxValue = -1;
     unordered_set<vector<bool> > TabuList;
-    for (int i = 0; i<maxLimit; i++){
+    int i;
+    for (i = 0; i<maxLimit && ((time(NULL) - START_TIME) < (tim * 60)); i++){
         State bestState = BeamSearchWithTabu(20, TabuList);
         long currValue = bestState.getValue();
         if (currValue > maxValue){
@@ -489,7 +507,7 @@ void HillClimbingWithRandomRestarts(int maxLimit)
             bestState.print();
         }
     }
-    cout << "Maxvalue after " << maxLimit << " random restarts: " << maxValue << endl;
+    cout << "Maxvalue after " << i << " random restarts: " << maxValue << endl;
     return;
 }
 
