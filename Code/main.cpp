@@ -25,7 +25,13 @@ struct Bid
     int regions[max];
 };
 
+struct BidPriceComparator{
+    const bool operator()(Bid A, Bid B) const{
+        return (A.price > B.price);
+    }
+};
 
+double START_TIME;
 float tim;
 int numRegions;
 int numBids;
@@ -91,7 +97,7 @@ struct State
                                     neighbours.push_back(neighbour);
                                     neighbour.removeBidFromState(bidsOfCompany[c][j]);
                                 }
-
+                
             } else {
                 if (neighbour.canAddBidToState(i)){
                     neighbour.addBidToState(i);
@@ -101,7 +107,7 @@ struct State
         }
         return neighbours;
     }
-    
+        
     double getValue(){
         double value = 0;
         for (int i=0; i<numBids; i++)
@@ -127,6 +133,7 @@ struct State
                 continue;
             addBidToState(i);
         }
+        return;
     }
     
     bool checkRegionClashWithBid (int bidNum){
@@ -141,8 +148,9 @@ struct State
         companiesSelected[allBids[bidNum].companyId] = true;
         for (int i=0; i<allBids[bidNum].numRegionsInBid; i++)
             regionsSelected[allBids[bidNum].regions[i]] = true;
+        return;
     }
-
+    
     bool canAddBidToState (int bidNum){
         if (companiesSelected[allBids[bidNum].companyId])
             return false;
@@ -154,6 +162,7 @@ struct State
         companiesSelected[allBids[bidNum].companyId] = false;
         for (int i=0; i<allBids[bidNum].numRegionsInBid; i++)
             regionsSelected[allBids[bidNum].regions[i]] = false;
+        return;
     }
 };
 
@@ -205,7 +214,7 @@ void readFile()
         while(ch[t]!='#')
         {
             if(ch[t]==' ')
-            {   x++;}
+            {	x++;}
             t++;
         }
         allBids[i].numRegionsInBid=x;
@@ -225,9 +234,11 @@ void readFile()
         getline(cin,g);
     }
     
+    sort(begin(allBids), end(allBids), BidPriceComparator());
     for(int i=0;i<numBids;i++){
         bidsOfCompany[allBids[i].companyId].push_back(i);
     }
+    return;
 }
 
 long HillClimbing()
@@ -270,37 +281,43 @@ struct StateValueComparator{
     }
 };
 
-void BeamSearch (int k){
-    State *beam = new State[k];
-    for (int i=0; i<k; i++)
-        beam[i].randomizeState();
+long BeamSearch (int k){
+    vector<State> beam;
+    State randState;
+    for (int i=0; i<k; i++){
+        randState.randomizeState();
+        beam.push_back(randState);
+    }
     cout << "State Value: " << (long)beam[0].getValue() <<  endl;
     
     while(true){
         priority_queue<State, vector<State>, StateValueComparator> stateHeap;
         
-        for (int i=0; i<k; i++){
+        unordered_set<vector<bool> > statesInHeap;
+        for (int i=0; i<beam.size(); i++)
+            statesInHeap.insert(beam[i].bidsSelected);
+        for (int i=0; i<beam.size(); i++){
             vector<State> nextStates = beam[i].getNeighbours();
             for (int j=0; j<nextStates.size(); j++)
-                stateHeap.push(nextStates[j]);
+                if (statesInHeap.find(nextStates[j].bidsSelected)==statesInHeap.end()){
+                    stateHeap.push(nextStates[j]);
+                    statesInHeap.insert(nextStates[j].bidsSelected);
+                }
         }
         
-        State* nextBeam = new State[k];
-        int i;
-        for (i=0; i<k && !stateHeap.empty(); i++){
-            nextBeam[i] = stateHeap.top();
+        vector<State> nextBeam;
+        for (int i=0; i<k && !stateHeap.empty(); i++){
+            nextBeam.push_back(stateHeap.top());
             stateHeap.pop();
         }
-        k = i;
         
-        if (nextBeam[0].getValue() >= beam[0].getValue()){
-            delete [] beam;
+        if (nextBeam[0].getValue() > beam[0].getValue())
             beam = nextBeam;
-        }
         else
             break;
         cout << "State Value: " << (long)beam[0].getValue() <<  endl;
     }
+    return (long)beam[0].getValue();
 }
 
 long HillClimbingWithTabu()
@@ -308,68 +325,119 @@ long HillClimbingWithTabu()
     State currentState;
     currentState.randomizeState();
     //    cout << "State Value: " << (long)currentState.getValue() <<  endl;
-
+    
     unordered_set<vector<bool> > TabuList;
-
+    
     int TabuStepCount = 0;
-    double BestTillNow = 0;
-
-    int steps = 0;
+    State BestStateTillNow;
+    double BestStateTillNowValue = 0;
+    
     while(true){
         vector<State> nextStates = currentState.getNeighbours();
-        steps++;
         
         int maxValueState = 0;
         double maxValue = 0;
+        //        int start_i = rand() % (nextStates.size() - 5);
         for (int i=0; i<nextStates.size(); i++)
             if (nextStates[i].getValue() > maxValue && (TabuList.find(nextStates[i].bidsSelected)==TabuList.end())){
                 maxValueState = i;
                 maxValue = nextStates[i].getValue();
             }
-
+        
         if (maxValue <= currentState.getValue()){
             TabuStepCount++;
-            TabuList.insert(currentState.bidsSelected);
-            if (TabuStepCount > 1000)
+            if (TabuStepCount > 200)
                 break;
         }
+        TabuList.insert(currentState.bidsSelected);
         currentState = nextStates[maxValueState];
-        if (BestTillNow < currentState.getValue())
-            BestTillNow = currentState.getValue();
-
-//        cout << "State Value: " << (long)currentState.getValue() << " Best: " << (long)BestTillNow <<  " Steps: " << steps << endl;
+        if (BestStateTillNowValue < currentState.getValue()){
+            BestStateTillNowValue = currentState.getValue();
+            BestStateTillNow = currentState;
+        }
+        
+        //        cout << "State Value: " << (long)currentState.getValue() << " Best: " << (long)BestTillNow << endl;
     }
     
-    return (long)currentState.getValue();
-    /*
-     for(int i=0; i<numBids; i++)
-     if(currentState.bidsSelected[i])
-     cout << i << " ";
-     cout << "#" << endl;
-     cout << "State Value: " << (long)currentState.getValue() <<  endl;
-     */
+    return (long)BestStateTillNow.getValue();
 }
 
+long BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
+    vector<State> beam;
+    State randState;
+    for (int i=0; i<k; i++){
+        randState.randomizeState();
+        beam.push_back(randState);
+    }
+    //    cout << "State Value: " << (long)beam[0].getValue() <<  endl;
+    
+    int TabuStepCount = 0;
+    State BestStateTillNow;
+    double BestStateTillNowValue = 0;
+    
+    while(true){
+        priority_queue<State, vector<State>, StateValueComparator> stateHeap;
+        
+        for (int i=0; i<beam.size(); i++)
+            TabuList.insert(beam[i].bidsSelected);
+        for (int i=0; i<beam.size(); i++){
+            vector<State> nextStates = beam[i].getNeighbours();
+            for (int j=0; j<nextStates.size(); j++)
+                if (TabuList.find(nextStates[j].bidsSelected)==TabuList.end()){
+                    stateHeap.push(nextStates[j]);
+                    TabuList.insert(nextStates[j].bidsSelected);
+                }
+        }
+        
+        if (BestStateTillNowValue < ((State)stateHeap.top()).getValue()){
+            BestStateTillNowValue = ((State)stateHeap.top()).getValue();
+            BestStateTillNow = stateHeap.top();
+        }
+        
+        vector<State> nextBeam;
+        double maxValue = 1.5 * ((State)stateHeap.top()).getValue();
+        for (int i=0; nextBeam.size()<k && !stateHeap.empty(); i++){
+            if (rand()%100 < ((State)stateHeap.top()).getValue()*100/maxValue)
+                nextBeam.push_back(stateHeap.top());
+            stateHeap.pop();
+        }
+        
+        if (nextBeam[0].getValue() <= beam[0].getValue()){
+            TabuStepCount++;
+            if (TabuStepCount > 10)
+                break;
+        }
+        for (int i=0; i<beam.size(); i++)
+            TabuList.insert(beam[i].bidsSelected);
+        beam = nextBeam;
+        
+        //        cout << "State Value: " << (long)beam[0].getValue() << " Tabu Steps: " << TabuStepCount <<  endl;
+    }
+    return (long)BestStateTillNow.getValue();
+}
 
 void HillClimbingWithRandomRestarts(int maxLimit)
 {
     long maxValue = -1;
+    unordered_set<vector<bool> > TabuList;
     for (int i = 0; i<maxLimit; i++){
-        long currValue = HillClimbingWithTabu();
-        if (currValue > maxValue)
+        long currValue = BeamSearchWithTabu(20, TabuList);
+        if (currValue > maxValue){
             maxValue = currValue;
-        cout << "Current maxvalue is: " << maxValue << endl;
+            cout << "Current maxvalue is: " << maxValue << " at " << time(NULL) - START_TIME << " seconds" << endl;
+        }
     }
     cout << "Maxvalue after " << maxLimit << " random restarts: " << maxValue << endl;
+    return;
 }
+
 
 int main()
 {
+    START_TIME = time(NULL);
     srand((unsigned int)time(NULL));
-//    srand(0);
     readFile();
     HillClimbingWithRandomRestarts(100);
-//    BeamSearch(50);
     
     return 0;
 }
