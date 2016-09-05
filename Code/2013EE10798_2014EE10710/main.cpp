@@ -471,6 +471,9 @@ State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
                 }
         }
         
+        if (stateHeap.empty())
+            break;
+
         if (BestStateTillNowValue < ((State)stateHeap.top()).getValue()){
             BestStateTillNowValue = ((State)stateHeap.top()).getValue();
             BestStateTillNow = stateHeap.top();
@@ -483,6 +486,9 @@ State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
                 nextBeam.push_back(stateHeap.top());
             stateHeap.pop();
         }
+
+        if (nextBeam.empty())
+            break;
 
         if (nextBeam[0].getValue() <= beam[0].getValue()){
             TabuStepCount++;
