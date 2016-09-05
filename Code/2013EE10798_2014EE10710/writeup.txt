@@ -1,0 +1,3 @@
+1
+Akshay Singla
+We implemented Stochastic Beam Search with random restarts and a Tabu list with no limit on size.
