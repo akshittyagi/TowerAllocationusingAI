@@ -445,17 +445,22 @@ long HillClimbingWithTabu()
 }
 
 State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
-    vector<State> beam;
-    State randState;
-    for (int i=0; i<k; i++){
-        randState.randomizeState();
-        beam.push_back(randState);
-    }
 //    cout << "State Value: " << (long)beam[0].getValue() <<  endl;
     
     int TabuStepCount = 0;
     State BestStateTillNow;
     double BestStateTillNowValue = 0;
+
+    vector<State> beam;
+    State randState;
+    for (int i=0; i<k; i++){
+        randState.randomizeState();
+        beam.push_back(randState);
+        if (randState.getValue() > BestStateTillNowValue){
+            BestStateTillNowValue = randState.getValue();
+            BestStateTillNow = randState;
+        }
+    }
 
     while(true){
         priority_queue<State, vector<State>, StateValueComparator> stateHeap;
