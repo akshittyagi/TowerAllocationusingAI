@@ -14,6 +14,7 @@
 #include <queue>
 #include <ctime>
 #include <unordered_set>
+#include <pthread.h>
 using namespace std;
 
 struct Bid
@@ -39,6 +40,8 @@ int numCompanies;
 vector<Bid> allBids;    // all input bids
 vector<vector<int> > bidsOfCompany;
 vector<vector<int> > bidsForRegion;
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+char* OutputFileName;
 
 struct State
 {
@@ -165,7 +168,7 @@ struct State
         }
         return neighbours;
     }
-    
+
     double getValue(){
         double value = 0;
         for (int i=0; i<numBids; i++)
@@ -224,10 +227,12 @@ struct State
     }
     
     void print(){
+        ofstream fil(OutputFileName);
         for(int i=0; i<numBids; i++)
             if(bidsSelected[i])
-                cout << allBids[i].bidId << " ";
-        cout << "#" << endl;
+                fil << allBids[i].bidId << " ";
+        fil << "#" << endl;
+        fil.close();
         return;
     }
 };
@@ -484,8 +489,6 @@ State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
             if (TabuStepCount > 10)
                 break;
         }
-        for (int i=0; i<beam.size(); i++)
-            TabuList.insert(beam[i].bidsSelected);
         beam = nextBeam;
         
 //        cout << "State Value: " << (long)beam[0].getValue() << " Tabu Steps: " << TabuStepCount <<  endl;
@@ -493,31 +496,71 @@ State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
     return BestStateTillNow;
 }
 
-void HillClimbingWithRandomRestarts(int maxLimit)
+void* BeamSearchWithRandomRestarts (void* ptr)
 {
-    long maxValue = -1;
+    int maxLimit = 100;
+    long* maxValue = (long*)ptr;
     unordered_set<vector<bool> > TabuList;
     int i;
     for (i = 0; i<maxLimit && ((time(NULL) - START_TIME) < (tim * 60)); i++){
         State bestState = BeamSearchWithTabu(20, TabuList);
         long currValue = bestState.getValue();
-        if (currValue > maxValue){
-            maxValue = currValue;
-            cout << "Current maxvalue is: " << maxValue << " at " << time(NULL) - START_TIME << " seconds and " << i << " restarts" << endl;
-            bestState.print();
+        if (currValue > *maxValue){
+            pthread_mutex_lock( &mutex1 );
+            if (currValue > *maxValue){
+                *maxValue = currValue;
+//                cout << "Current maxvalue is: " << *maxValue << " at " << time(NULL) - START_TIME << " seconds and " << i << " restarts" << endl;
+                bestState.print();
+            }
+            pthread_mutex_unlock( &mutex1 );
         }
     }
-    cout << "Maxvalue after " << i << " random restarts: " << maxValue << endl;
-    return;
+//    cout << "Maxvalue after " << i << " random restarts: " << *maxValue << endl;
+    return NULL;
 }
 
-
-int main()
+int main (int argc, char *argv[])
 {
     START_TIME = time(NULL);
     srand((unsigned int)time(NULL));
+    OutputFileName = argv[1];
     readFile();
-    HillClimbingWithRandomRestarts(60);
+
+    pthread_t thread1, thread2, thread3;
+    int  iret1, iret2, iret3;
+    long maxValue = -1;
+
+    iret1 = pthread_create( &thread1, NULL, BeamSearchWithRandomRestarts, &maxValue);
+    if(iret1)
+    {
+        fprintf(stderr,"Error - pthread_create() return code: %d\n",iret1);
+        exit(EXIT_FAILURE);
+    }
+    
+    iret2 = pthread_create( &thread2, NULL, BeamSearchWithRandomRestarts, &maxValue);
+    if(iret2)
+    {
+        fprintf(stderr,"Error - pthread_create() return code: %d\n",iret2);
+        exit(EXIT_FAILURE);
+    }
+
+    iret2 = pthread_create( &thread2, NULL, BeamSearchWithRandomRestarts, &maxValue);
+    if(iret3)
+    {
+        fprintf(stderr,"Error - pthread_create() return code: %d\n",iret3);
+        exit(EXIT_FAILURE);
+    }
+
+//    printf("pthread_create() for thread 1 returns: %d\n",iret1);
+//    printf("pthread_create() for thread 2 returns: %d\n",iret2);
+//    printf("pthread_create() for thread 3 returns: %d\n",iret3);
+    
+    pthread_join( thread1, NULL);
+    pthread_join( thread2, NULL);
+    pthread_join( thread3, NULL);
+    
+    exit(EXIT_SUCCESS);
     
     return 0;
 }
+
