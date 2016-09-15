@@ -48,6 +48,7 @@ struct State
     vector<bool> bidsSelected;
     vector<bool> companiesSelected;
     vector<bool> regionsSelected;
+    double Value;
     
     State(){
         bidsSelected.resize(numBids);
@@ -59,6 +60,7 @@ struct State
             regionsSelected[i] = false;
         for (int i=0; i<numCompanies; i++)
             companiesSelected[i] = false;
+        Value = 0;
     }
     
     bool checkValidState(){
@@ -170,15 +172,12 @@ struct State
     }
 
     double getValue(){
-        double value = 0;
-        for (int i=0; i<numBids; i++)
-            if (bidsSelected[i])
-                value += allBids[i].price;
-        return value;
+        return Value;
     }
     
     void randomizeState(){
         
+        Value = 0;
         for (int i=0; i<numBids; i++)
             bidsSelected[i] = false;
         for (int i=0; i<numRegions; i++)
@@ -206,6 +205,7 @@ struct State
     
     void addBidToState (int bidNum){
         bidsSelected[bidNum] = true;
+        Value += allBids[bidNum].price;
         companiesSelected[allBids[bidNum].companyId] = true;
         for (int i=0; i<allBids[bidNum].numRegionsInBid; i++)
             regionsSelected[allBids[bidNum].regions[i]] = true;
@@ -220,6 +220,7 @@ struct State
     
     void removeBidFromState (int bidNum){
         bidsSelected[bidNum] = false;
+        Value -= allBids[bidNum].price;
         companiesSelected[allBids[bidNum].companyId] = false;
         for (int i=0; i<allBids[bidNum].numRegionsInBid; i++)
             regionsSelected[allBids[bidNum].regions[i]] = false;
