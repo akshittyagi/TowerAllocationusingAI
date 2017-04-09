@@ -15,6 +15,7 @@
 #include <ctime>
 #include <unordered_set>
 #include <pthread.h>
+#include <algorithm>
 using namespace std;
 
 struct Bid
