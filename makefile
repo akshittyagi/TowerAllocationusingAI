@@ -1,2 +1,2 @@
 all:
-  Code/compile.sh
+	Code/compile.sh
