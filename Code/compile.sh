@@ -1,1 +1,1 @@
-g++ -pthread main.cpp -o output.out -std=c++11
+g++ -pthread Code/main.cpp -o output.out -std=c++11

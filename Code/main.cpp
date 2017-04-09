@@ -50,7 +50,7 @@ struct State
     vector<bool> companiesSelected;
     vector<bool> regionsSelected;
     double Value;
-    
+
     State(){
         bidsSelected.resize(numBids);
         regionsSelected.resize(numRegions);
@@ -63,7 +63,7 @@ struct State
             companiesSelected[i] = false;
         Value = 0;
     }
-    
+
     bool checkValidState(){
         for (int i=0; i<numRegions; i++)
             regionsSelected[i] = false;
@@ -85,16 +85,16 @@ struct State
         }
         return true;
     }
-    
+
     vector<State> getNeighbours (){
         vector<State> neighbours;
-        
+
         for(int i=0; i<numBids; i++){
             State neighbour = *this;
             if (bidsSelected[i]){
                 neighbour.removeBidFromState(i);
                 neighbours.push_back(neighbour);
-                
+
                 for (int c=0; c<numCompanies; c++)
                     if (!neighbour.companiesSelected[c])
                         for (int j=0; j<bidsOfCompany[c].size(); j++)
@@ -114,16 +114,16 @@ struct State
         }
         return neighbours;
     }
-    
+
     vector<State> getBetterNeighboursFaster (){
         vector<State> neighbours;
-        
+
         for(int i=0; i<numBids; i++){
             State neighbour = *this;
             if (bidsSelected[i]){
                 neighbour.removeBidFromState(i);
                 neighbours.push_back(neighbour);
-                
+
                 unordered_set<int> candidateBids;
                 for (int j=0; j<allBids[i].numRegionsInBid; j++)
                     for (int k=0; k<bidsForRegion[allBids[i].regions[j]].size(); k++)
@@ -136,7 +136,7 @@ struct State
                     if (neighbour.canAddBidToState(*it)){
                         neighbour.addBidToState(*it);
                         neighbours.push_back(neighbour);
-                        
+
                         State neighbour2 = neighbour;
                         for (unordered_set<int>::iterator it2=it; it2!=candidateBids.end(); it2++){
                             if (neighbour2.canAddBidToState(*it2)){
@@ -147,7 +147,7 @@ struct State
                         neighbour.removeBidFromState(*it);
                     }
                 }
-                
+
                 for (unordered_set<int>::iterator it=candidateBids.begin(); it!=candidateBids.end(); it++){
                     if (neighbour.canAddBidToState(*it)){
                         neighbour.addBidToState(*it);
@@ -161,7 +161,7 @@ struct State
                     }
                 }
 
-                
+
             } else {
                 if (neighbour.canAddBidToState(i)){
                     neighbour.addBidToState(i);
@@ -175,9 +175,9 @@ struct State
     double getValue(){
         return Value;
     }
-    
+
     void randomizeState(){
-        
+
         Value = 0;
         for (int i=0; i<numBids; i++)
             bidsSelected[i] = false;
@@ -185,10 +185,10 @@ struct State
             regionsSelected[i] = false;
         for (int i=0; i<numCompanies; i++)
             companiesSelected[i] = false;
-        
+
         int num = rand() % numBids;
         addBidToState(num);
-        
+
         for(int i = (num+1)%numBids; i!=num; i = (i+1)%numBids){
             if(companiesSelected[allBids[i].companyId] || checkRegionClashWithBid(i))
                 continue;
@@ -196,14 +196,14 @@ struct State
         }
         return;
     }
-        
+
     bool checkRegionClashWithBid (int bidNum){
         for(int i=0; i<allBids[bidNum].numRegionsInBid; i++)
             if(regionsSelected[allBids[bidNum].regions[i]])
                 return true;
         return false;
     }
-    
+
     void addBidToState (int bidNum){
         bidsSelected[bidNum] = true;
         Value += allBids[bidNum].price;
@@ -218,7 +218,7 @@ struct State
             return false;
         return (!checkRegionClashWithBid(bidNum));
     }
-    
+
     void removeBidFromState (int bidNum){
         bidsSelected[bidNum] = false;
         Value -= allBids[bidNum].price;
@@ -227,7 +227,7 @@ struct State
             regionsSelected[allBids[bidNum].regions[i]] = false;
         return;
     }
-    
+
     void print(){
         ofstream fil(OutputFileName);
         for(int i=0; i<numBids; i++)
@@ -243,13 +243,13 @@ void readFile()
 {
     // Give file to STDIN in with "./a.out < inputfile.txt" or enter full file path below
 //    freopen("/Users/Shantanu/Documents/College/SemVII/AI/Assign1/Code/TestCases/3.txt", "r", stdin);
-    
+
     string g;
     scanf("%f\n\n",&tim);
     scanf("%d\n\n",&numRegions);
     scanf("%d\n\n",&numBids);
     scanf("%d\n\n",&numCompanies);
-    
+
     bidsOfCompany.resize(numCompanies);
     for (int i=0; i<numCompanies; i++){
         vector<int> A;
@@ -260,7 +260,7 @@ void readFile()
         vector<int> A;
         bidsForRegion[i] = A;
     }
-    
+
     for(int i=0;i<numBids;i++)
     {
         Bid inputBid;
@@ -275,10 +275,10 @@ void readFile()
             ch1[j]=ch[t];
             j++;t++;
         }
-        
+
         ch1[j]='\0';
         inputBid.companyId=atoi(ch1);
-        
+
         ch1[0]='\0';j=0;t++;
         while(ch[t]!=' ')
         {
@@ -288,7 +288,7 @@ void readFile()
         ch1[j]='\0';
         inputBid.price=strtod (ch1, NULL);
         t++;
-        
+
         int x=0;
         int w=t;
         while(ch[t]!='#')
@@ -315,7 +315,7 @@ void readFile()
         allBids.push_back(inputBid);
         getline(cin,g);
     }
-    
+
     sort(allBids.begin(), allBids.end(), BidPriceComparator());
     for(int i=0;i<numBids;i++){
         bidsOfCompany[allBids[i].companyId].push_back(i);
@@ -330,10 +330,10 @@ long HillClimbing()
     State currentState;
     currentState.randomizeState();
     //    cout << "State Value: " << (long)currentState.getValue() <<  endl;
-    
+
     while(true){
         vector<State> nextStates = currentState.getNeighbours();
-        
+
         int maxValueState = 0;
         double maxValue = 0;
         for (int i=0; i<nextStates.size(); i++)
@@ -341,14 +341,14 @@ long HillClimbing()
                 maxValueState = i;
                 maxValue = nextStates[i].getValue();
             }
-        
+
         if (maxValue >= currentState.getValue())
             currentState = nextStates[maxValueState];
         else
             break;
         cout << "State Value: " << (long)currentState.getValue() <<  endl;
     }
-    
+
     return (long)currentState.getValue();
     /*
      for(int i=0; i<numBids; i++)
@@ -373,10 +373,10 @@ long BeamSearch (int k){
         beam.push_back(randState);
     }
     cout << "State Value: " << (long)beam[0].getValue() <<  endl;
-    
+
     while(true){
         priority_queue<State, vector<State>, StateValueComparator> stateHeap;
-        
+
         unordered_set<vector<bool> > statesInHeap;
         for (int i=0; i<beam.size(); i++)
             statesInHeap.insert(beam[i].bidsSelected);
@@ -388,13 +388,13 @@ long BeamSearch (int k){
                     statesInHeap.insert(nextStates[j].bidsSelected);
                 }
         }
-        
+
         vector<State> nextBeam;
         for (int i=0; i<k && !stateHeap.empty(); i++){
             nextBeam.push_back(stateHeap.top());
             stateHeap.pop();
         }
-        
+
         if (nextBeam[0].getValue() > beam[0].getValue())
             beam = nextBeam;
         else
@@ -418,7 +418,7 @@ long HillClimbingWithTabu()
 
     while(true){
         vector<State> nextStates = currentState.getNeighbours();
-        
+
         int maxValueState = 0;
         double maxValue = 0;
 //        int start_i = rand() % (nextStates.size() - 5);
@@ -442,13 +442,13 @@ long HillClimbingWithTabu()
 
 //        cout << "State Value: " << (long)currentState.getValue() << " Best: " << (long)BestTillNow << endl;
     }
-    
+
     return (long)BestStateTillNow.getValue();
 }
 
 State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
 //    cout << "State Value: " << (long)beam[0].getValue() <<  endl;
-    
+
     int TabuStepCount = 0;
     State BestStateTillNow;
     double BestStateTillNowValue = 0;
@@ -466,7 +466,7 @@ State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
 
     while(true){
         priority_queue<State, vector<State>, StateValueComparator> stateHeap;
-        
+
         for (int i=0; i<beam.size(); i++)
             TabuList.insert(beam[i].bidsSelected);
         for (int i=0; i<beam.size(); i++){
@@ -477,7 +477,7 @@ State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
                     TabuList.insert(nextStates[j].bidsSelected);
                 }
         }
-        
+
         if (stateHeap.empty())
             break;
 
@@ -485,7 +485,7 @@ State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
             BestStateTillNowValue = ((State)stateHeap.top()).getValue();
             BestStateTillNow = stateHeap.top();
         }
-        
+
         vector<State> nextBeam;
         double maxValue = 1.5 * ((State)stateHeap.top()).getValue();
         for (int i=0; nextBeam.size()<k && !stateHeap.empty(); i++){
@@ -503,7 +503,7 @@ State BeamSearchWithTabu (int k, unordered_set<vector<bool> > TabuList){
                 break;
         }
         beam = nextBeam;
-        
+
 //        cout << "State Value: " << (long)beam[0].getValue() << " Tabu Steps: " << TabuStepCount <<  endl;
     }
     return BestStateTillNow;
@@ -549,7 +549,7 @@ int main (int argc, char *argv[])
         fprintf(stderr,"Error - pthread_create() return code: %d\n",iret1);
         exit(EXIT_FAILURE);
     }
-    
+
     iret2 = pthread_create( &thread2, NULL, BeamSearchWithRandomRestarts, &maxValue);
     if(iret2)
     {
@@ -567,13 +567,13 @@ int main (int argc, char *argv[])
 //    printf("pthread_create() for thread 1 returns: %d\n",iret1);
 //    printf("pthread_create() for thread 2 returns: %d\n",iret2);
 //    printf("pthread_create() for thread 3 returns: %d\n",iret3);
-    
+
     pthread_join( thread1, NULL);
     pthread_join( thread2, NULL);
     pthread_join( thread3, NULL);
-    
+
     exit(EXIT_SUCCESS);
-    
+
     return 0;
 }
 
