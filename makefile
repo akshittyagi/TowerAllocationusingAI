@@ -1,0 +1,2 @@
+all:
+  Code/compile.sh
