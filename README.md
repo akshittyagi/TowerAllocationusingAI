@@ -1,4 +1,8 @@
 # Tower Allocation
+
+## Build Status
+[![Build Status](https://travis-ci.org/akshittyagi/TowerAllocationusingAI.svg?branch=master)](https://travis-ci.org/akshittyagi/TowerAllocationusingAI)
+
 This is the code for the first assignment of <a href="http://www.cse.iitd.ac.in/~mausam/courses/col333/autumn2016/">COL333:Artificial Intelligence</a>. The problem statement can be found <a href="http://www.cse.iitd.ac.in/~mausam/courses/col333/autumn2016/A1/A1.pdf">here</a>. We have used a Beam Search algorithm with some parallelization introduced to make the search more optimal.  
 
 ## Algorithm
